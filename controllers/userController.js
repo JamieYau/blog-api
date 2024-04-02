@@ -1,11 +1,13 @@
 const asyncHandler = require("express-async-handler");
 const User = require("../models/UserModel");
+const bcrypt = require("bcryptjs");
 
 // Create User
 const createUser = asyncHandler(async (req, res) => {
-  console.log(req.body);
   const { username, password } = req.body;
-  const user = await User.create({ username, password });
+  // Hash the password before storing it
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const user = await User.create({ username, password: hashedPassword });
   res.status(201).json({ success: true, data: user });
 });
 
