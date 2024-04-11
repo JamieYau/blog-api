@@ -31,7 +31,7 @@ const updatePostById = asyncHandler(async (req, res) => {
   const { title, content, published } = req.body;
   const updatedPost = await Post.findByIdAndUpdate(
     id,
-    { title, content, published }, // Update the published field as well
+    { title, content, published, updatedAt: Date.now() },
     { new: true }
   );
   if (!updatedPost) {
@@ -40,6 +40,7 @@ const updatePostById = asyncHandler(async (req, res) => {
     res.status(200).json({ success: true, data: updatedPost });
   }
 });
+
 
 // Delete Post by ID
 const deletePostById = asyncHandler(async (req, res) => {

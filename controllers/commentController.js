@@ -31,7 +31,7 @@ const updateCommentById = asyncHandler(async (req, res) => {
   const { content } = req.body;
   const updatedComment = await Comment.findByIdAndUpdate(
     id,
-    { content },
+    { content, updatedAt: Date.now() },
     { new: true }
   );
   if (!updatedComment) {
@@ -40,6 +40,7 @@ const updateCommentById = asyncHandler(async (req, res) => {
     res.status(200).json({ success: true, data: updatedComment });
   }
 });
+
 
 // Delete Comment by ID
 const deleteCommentById = asyncHandler(async (req, res) => {
