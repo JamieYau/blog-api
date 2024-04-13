@@ -17,7 +17,7 @@ const createPost = asyncHandler(async (req, res) => {
 
 // Get All Posts
 const getPosts = asyncHandler(async (req, res) => {
-  const posts = await Post.find();
+  const posts = await Post.find({ published: true }); // Only fetch published posts
   res.status(200).json({ success: true, data: posts });
 });
 
