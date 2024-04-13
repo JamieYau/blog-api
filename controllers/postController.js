@@ -22,6 +22,8 @@ const getPosts = asyncHandler(async (req, res) => {
 });
 
 // Get Post by ID
+// only return published?
+// unless the user = author?
 const getPostById = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const post = await Post.findById(id);
@@ -36,16 +38,25 @@ const getPostById = asyncHandler(async (req, res) => {
 const updatePostById = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { title, content, published } = req.body;
+
+  // Find the post by ID
+  const post = await Post.findById(id);
+  if (!post) {
+    return res.status(404).json({ success: false, error: "Post not found" });
+  }
+
+  // Check if the authenticated user is the author of the post
+  if (req.user.userId !== post.author.toString()) {
+    return res.status(403).json({ success: false, error: "Unauthorized" });
+  }
+
+  // Update the post
   const updatedPost = await Post.findByIdAndUpdate(
     id,
     { title, content, published, updatedAt: Date.now() },
     { new: true }
   );
-  if (!updatedPost) {
-    res.status(404).json({ success: false, error: "Post not found" });
-  } else {
-    res.status(200).json({ success: true, data: updatedPost });
-  }
+  res.status(200).json({ success: true, data: updatedPost });
 });
 
 

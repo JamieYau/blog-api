@@ -13,7 +13,7 @@ router.get("/", postController.getPosts);
 router.get("/:id", postController.getPostById);
 
 // Update Post by ID
-router.put("/:id", postController.updatePostById);
+router.put("/:id", authenticateToken, postController.updatePostById);
 
 // Delete Post by ID
 router.delete("/:id", postController.deletePostById);
