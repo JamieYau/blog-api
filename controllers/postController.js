@@ -8,8 +8,8 @@ const createPost = asyncHandler(async (req, res) => {
   // Extract the user ID from the authenticated user's token
   const userId = req.user.userId;
 
-  // Now you have the userId, you can create the post with it
-  const post = await Post.create({ title, content, published, author: userId });
+  // Create the post
+  const post = await Post.create({ title, content, published, authorId: userId });
 
   res.status(201).json({ success: true, data: post });
 });
@@ -46,7 +46,7 @@ const updatePostById = asyncHandler(async (req, res) => {
   }
 
   // Check if the authenticated user is the author of the post
-  if (req.user.userId !== post.author.toString()) {
+  if (req.user.userId !== post.authorId.toString()) {
     return res.status(403).json({ success: false, error: "Unauthorized" });
   }
 
@@ -71,7 +71,7 @@ const deletePostById = asyncHandler(async (req, res) => {
   }
 
   // Check if the authenticated user is the author of the post
-  if (req.user.userId !== post.author.toString()) {
+  if (req.user.userId !== post.authorId.toString()) {
     return res.status(403).json({ success: false, error: "Unauthorized" });
   }
 

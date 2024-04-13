@@ -1,9 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const commentController = require("../controllers/commentController");
+const { authenticateToken} = require("../controllers/authController")
 
 // Create New Comment
-router.post("/", commentController.createComment);
+router.post("/", authenticateToken, commentController.createComment);
 
 // Get All Comments
 router.get("/", commentController.getComments);

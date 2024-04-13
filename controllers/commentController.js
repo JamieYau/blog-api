@@ -1,12 +1,36 @@
 const asyncHandler = require("express-async-handler");
 const Comment = require("../models/CommentModel");
+const Post = require("../models/PostModel")
 
 // Create Comment
 const createComment = asyncHandler(async (req, res) => {
-  const { post, content, author } = req.body;
-  const comment = await Comment.create({ post, content,author });
+  const { postId, content } = req.body;
+
+  // Check if the post exists
+  const post = await Post.findById(postId);
+  if (!post) {
+    return res.status(404).json({ success: false, error: "Post not found" });
+  }
+
+  // Check if the post is published
+  if (!post.published) {
+    return res
+      .status(403)
+      .json({ success: false, error: "Cannot comment on unpublished posts" });
+  }
+
+  // Extract the user ID from the authenticated user's token
+  const userId = req.user.userId;
+
+  // Create comment
+  const comment = await Comment.create({
+    postId,
+    content,
+    authorId: userId,
+  });
   res.status(201).json({ success: true, data: comment });
 });
+
 
 // Get All Comments
 const getComments = asyncHandler(async (req, res) => {
