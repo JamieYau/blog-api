@@ -3,10 +3,17 @@ const Post = require("../models/PostModel");
 
 // Create Post
 const createPost = asyncHandler(async (req, res) => {
-  const { title, content, published, author } = req.body;
-  const post = await Post.create({ title, content, published, author });
+  const { title, content, published } = req.body;
+
+  // Extract the user ID from the authenticated user's token
+  const userId = req.user.userId;
+
+  // Now you have the userId, you can create the post with it
+  const post = await Post.create({ title, content, published, author: userId });
+
   res.status(201).json({ success: true, data: post });
 });
+
 
 // Get All Posts
 const getPosts = asyncHandler(async (req, res) => {
