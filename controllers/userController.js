@@ -13,14 +13,14 @@ const createUser = asyncHandler(async (req, res) => {
 
 // Get all Users
 const getUsers = asyncHandler(async (req, res) => {
-  const users = await User.find();
+  const users = await User.find().select("-password");
   res.status(200).json({ success: true, data: users });
 });
 
 // Get a User by ID
 const getUserById = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const user = await User.findById(id);
+  const user = await User.findById(id).select("-password");;
   if (!user) {
     res.status(404).json({ success: false, error: "User not found" });
   } else {
