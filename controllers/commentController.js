@@ -1,6 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const Comment = require("../models/CommentModel");
-const Post = require("../models/PostModel")
+const Post = require("../models/PostModel");
 
 // Create Comment
 const createComment = asyncHandler(async (req, res) => {
@@ -31,7 +31,6 @@ const createComment = asyncHandler(async (req, res) => {
   res.status(201).json({ success: true, data: comment });
 });
 
-
 // Get All Comments
 const getComments = asyncHandler(async (req, res) => {
   const comments = await Comment.find();
@@ -53,18 +52,26 @@ const getCommentById = asyncHandler(async (req, res) => {
 const updateCommentById = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { content } = req.body;
+
+  // Check if the comment exists
+  const comment = await Comment.findById(id);
+  if (!comment) {
+    res.status(404).json({ success: false, error: "Comment not found" });
+  }
+
+  // Check if the authenticated user is the author of the comment
+  const userId = req.user.userId;
+  if (userId !== comment.authorId.toString()) {
+    res.status(403).json({ success: false, error: "Unauthorized" });
+  }
+  // Update comment
   const updatedComment = await Comment.findByIdAndUpdate(
     id,
-    { content, updatedAt: Date.now() },
+    { content, updateAt: Date.now() },
     { new: true }
   );
-  if (!updatedComment) {
-    res.status(404).json({ success: false, error: "Comment not found" });
-  } else {
-    res.status(200).json({ success: true, data: updatedComment });
-  }
+  res.status(200).json({ success: true, data: updatedComment });
 });
-
 
 // Delete Comment by ID
 const deleteCommentById = asyncHandler(async (req, res) => {

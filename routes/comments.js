@@ -13,7 +13,7 @@ router.get("/", commentController.getComments);
 router.get("/:id", commentController.getCommentById);
 
 // Update Comment by ID
-router.put("/:id", commentController.updateCommentById);
+router.put("/:id", authenticateToken, commentController.updateCommentById);
 
 // Delete Comment by ID
 router.delete("/:id", commentController.deleteCommentById);
