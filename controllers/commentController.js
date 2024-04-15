@@ -76,12 +76,21 @@ const updateCommentById = asyncHandler(async (req, res) => {
 // Delete Comment by ID
 const deleteCommentById = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const comment = await Comment.findByIdAndDelete(id);
+  // Check if the comment exists
+  const comment = await Comment.findById(id);
   if (!comment) {
     res.status(404).json({ success: false, error: "Comment not found" });
-  } else {
-    res.status(204).end();
   }
+
+  // Check if the authenticated user is the author of the post
+  const userId = req.user.userId;
+  if (userId !== comment.authorId.toString()) {
+    return res.status(403).json({ success: false, error: "Unauthorized" });
+  }
+
+  // Delete comment
+  await Comment.findByIdAndDelete(id);
+  res.status(204).end();
 });
 
 module.exports = {
