@@ -11,8 +11,16 @@ const login = asyncHandler(async (req, res) => {
   // Find the user by username
   const user = await User.findOne({ username });
 
-  // Check if user exists and if the password matches
-  if (!user || !(await bcrypt.compare(password, user.password))) {
+  // Check if user exists
+  if (!user) {
+    return res
+      .status(401)
+      .json({ success: false, message: "Invalid username" });
+  }
+
+  // Validate the password
+  const isValidPassword = await user.validatePassword(password);
+  if (!isValidPassword) {
     return res
       .status(401)
       .json({ success: false, message: "Invalid username or password" });

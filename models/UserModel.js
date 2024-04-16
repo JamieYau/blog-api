@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const bcrypt = require("bcryptjs");
-const asyncHandler = require("express-async-handler");
 
 const userSchema = new Schema({
   username: {
@@ -16,6 +15,11 @@ const userSchema = new Schema({
     maxlength: [32, "Password cannot exceed 32 characters"],
   },
 });
+
+// Schema method to validate user password
+userSchema.methods.validatePassword = async function (password) {
+  return bcrypt.compare(password, this.password);
+};
 
 // Middleware to hash password before saving
 userSchema.pre("save", async function (next) {
