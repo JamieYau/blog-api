@@ -13,6 +13,13 @@ router.post(
       .isLength({ min: 8, max: 32 })
       .withMessage("Password must be between 8 and 32 characters"),
   ],
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+    next();
+  },
   userController.createUser
 );
 
@@ -25,13 +32,8 @@ router.get("/:id", userController.getUserById);
 // Update user by ID with validation
 router.put(
   "/:id",
+  [body("username").trim()],
   authenticateToken,
-  [
-    body("username"),
-    body("password")
-      .isLength({ min: 8, max: 32 })
-      .withMessage("Password must be between 8 and 32 characters"),
-  ],
   userController.updateUserById
 );
 
