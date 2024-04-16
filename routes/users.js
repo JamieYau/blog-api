@@ -16,6 +16,6 @@ router.get("/:id", userController.getUserById);
 router.put("/:id", authenticateToken, userController.updateUserById);
 
 // Delete user by ID
-router.delete("/:id", userController.deleteUserById);
+router.delete("/:id", authenticateToken, userController.deleteUserById);
 
 module.exports = router;

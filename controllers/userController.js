@@ -57,12 +57,20 @@ const updateUserById = asyncHandler(async (req, res) => {
 // Delete User by ID
 const deleteUserById = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const user = await User.findByIdAndDelete(id);
+
+  // Find user by Id
+  const user = await User.findById(id);
   if (!user) {
-    res.status(404).json({ success: false, error: "User not found" });
-  } else {
-    res.status(204).end();
+    return res.status(404).json({ success: false, error: "User not found" });
   }
+  // Check if authenticated user matches id
+  if (req.user.userId !== id) {
+    return res.status(403).json({ success: false, error: "Unauthorized" });
+  }
+
+  // Delete user
+  await User.findByIdAndDelete(id);
+  res.status(204).end();
 });
 
 module.exports = {
