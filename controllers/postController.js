@@ -9,11 +9,18 @@ const createPost = asyncHandler(async (req, res) => {
   const userId = req.user.userId;
 
   // Create the post
-  const post = await Post.create({ title, content, published, authorId: userId });
-
-  res.status(201).json({ success: true, data: post });
+  try {
+    const post = await Post.create({
+      title,
+      content,
+      published,
+      authorId: userId,
+    });
+    res.status(201).json({ success: true, data: post });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
 });
-
 
 // Get All Posts
 const getPosts = asyncHandler(async (req, res) => {
@@ -50,15 +57,26 @@ const updatePostById = asyncHandler(async (req, res) => {
     return res.status(403).json({ success: false, error: "Unauthorized" });
   }
 
-  // Update the post
-  const updatedPost = await Post.findByIdAndUpdate(
-    id,
-    { title, content, published, updatedAt: Date.now() },
-    { new: true }
-  );
-  res.status(200).json({ success: true, data: updatedPost });
-});
+  // Update fields
+  if (title) {
+    post.title = title;
+  }
+  if (content) {
+    post.content = content;
+  }
+  if (published) {
+    post.published = published;
+  }
+  post.updatedAt = Date.now();
 
+  // Save the updated post
+  try {
+    await post.save();
+    res.status(200).json({ success: true, data: updatedPost });
+  } catch (error) {
+    res.status(400).json({ success: false, error: "Could not update post" });
+  }
+});
 
 // Delete Post by ID
 const deletePostById = asyncHandler(async (req, res) => {

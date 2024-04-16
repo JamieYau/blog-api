@@ -1,5 +1,4 @@
 const asyncHandler = require("express-async-handler");
-const { validationResult } = require("express-validator");
 const User = require("../models/UserModel");
 
 // Create User
@@ -30,6 +29,7 @@ const getUserById = asyncHandler(async (req, res) => {
   }
 });
 
+// Update User by ID
 const updateUserById = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { username, password } = req.body;
