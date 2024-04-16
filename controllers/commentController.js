@@ -23,12 +23,16 @@ const createComment = asyncHandler(async (req, res) => {
   const userId = req.user.userId;
 
   // Create comment
-  const comment = await Comment.create({
-    postId,
-    content,
-    authorId: userId,
-  });
-  res.status(201).json({ success: true, data: comment });
+  try {
+    const comment = await Comment.create({
+      postId,
+      content,
+      authorId: userId,
+    });
+    res.status(201).json({ success: true, data: comment });
+  } catch {
+    res.status(400).json({ success: false, error: error.message });
+  }
 });
 
 // Get All Comments
@@ -64,13 +68,18 @@ const updateCommentById = asyncHandler(async (req, res) => {
   if (userId !== comment.authorId.toString()) {
     res.status(403).json({ success: false, error: "Unauthorized" });
   }
-  // Update comment
-  const updatedComment = await Comment.findByIdAndUpdate(
-    id,
-    { content, updateAt: Date.now() },
-    { new: true }
-  );
-  res.status(200).json({ success: true, data: updatedComment });
+
+  // Update fields
+  comment.content = content;
+  comment.updatedAt = Date.now();
+
+  // Save the Updated comment
+  try {
+    await comment.save();
+    res.status(200).json({ success: true, data: comment });
+  } catch (error) {
+    res.status(400).json({ success: false, error: "Could not update comment" });
+  }
 });
 
 // Delete Comment by ID

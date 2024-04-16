@@ -2,7 +2,8 @@ const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/userController");
 const { authenticateToken } = require("../controllers/authController");
-const { body } = require("express-validator");
+const { body, param } = require("express-validator");
+const { handleValidationErrors } = require("../middlewares");
 
 // Create New user with validation
 router.post(
@@ -13,13 +14,7 @@ router.post(
       .isLength({ min: 8, max: 32 })
       .withMessage("Password must be between 8 and 32 characters"),
   ],
-  (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ success: false, errors: errors.array() });
-    }
-    next();
-  },
+  handleValidationErrors,
   userController.createUser
 );
 
@@ -27,17 +22,32 @@ router.post(
 router.get("/", userController.getUsers);
 
 // Get user by ID
-router.get("/:id", userController.getUserById);
+router.get(
+  "/:id",
+  [param("id").isMongoId().withMessage("Invalid User ID")],
+  handleValidationErrors,
+  userController.getUserById
+);
 
 // Update user by ID with validation
 router.put(
   "/:id",
-  [body("username").trim()],
+  [
+    param("id").isMongoId().withMessage("Invalid User ID"),
+    body("username").trim(),
+  ],
+  handleValidationErrors,
   authenticateToken,
   userController.updateUserById
 );
 
 // Delete user by ID
-router.delete("/:id", authenticateToken, userController.deleteUserById);
+router.delete(
+  "/:id",
+  [param("id").isMongoId().withMessage("Invalid User ID")],
+  handleValidationErrors,
+  authenticateToken,
+  userController.deleteUserById
+);
 
 module.exports = router;

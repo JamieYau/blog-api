@@ -72,7 +72,7 @@ const updatePostById = asyncHandler(async (req, res) => {
   // Save the updated post
   try {
     await post.save();
-    res.status(200).json({ success: true, data: updatedPost });
+    res.status(200).json({ success: true, data: post });
   } catch (error) {
     res.status(400).json({ success: false, error: "Could not update post" });
   }
