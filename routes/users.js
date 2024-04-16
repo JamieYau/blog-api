@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const userController = require("../controllers/userController");
+const { authenticateToken } = require("../controllers/authController")
 
 // Create New user
 router.post("/", userController.createUser);
@@ -12,7 +13,7 @@ router.get("/", userController.getUsers);
 router.get("/:id", userController.getUserById);
 
 // Update user by ID
-router.put("/:id", userController.updateUserById);
+router.put("/:id", authenticateToken, userController.updateUserById);
 
 // Delete user by ID
 router.delete("/:id", userController.deleteUserById);
