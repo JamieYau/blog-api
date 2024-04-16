@@ -4,8 +4,12 @@ const User = require("../models/UserModel");
 // Create User
 const createUser = asyncHandler(async (req, res) => {
   const { username, password } = req.body;
-  const user = await User.create({ username, password });
-  res.status(201).json({ success: true, data: user });
+  try {
+    const user = await User.create({ username, password });
+    res.status(201).json({ success: true, data: user });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
 });
 
 // Get all Users
@@ -25,7 +29,6 @@ const getUserById = asyncHandler(async (req, res) => {
   }
 });
 
-// Update User by ID
 const updateUserById = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { username, password } = req.body;
@@ -47,6 +50,13 @@ const updateUserById = asyncHandler(async (req, res) => {
   }
   if (password) {
     user.password = password;
+  }
+
+  // Validate user data
+  try {
+    await user.validate();
+  } catch (error) {
+    return res.status(400).json({ success: false, error: error.message });
   }
 
   // Save the updated user
