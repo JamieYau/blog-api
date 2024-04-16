@@ -1,8 +1,14 @@
 const asyncHandler = require("express-async-handler");
+const { validationResult } = require("express-validator");
 const User = require("../models/UserModel");
 
 // Create User
 const createUser = asyncHandler(async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ success: false, errors: errors.array() });
+  }
+
   const { username, password } = req.body;
   try {
     const user = await User.create({ username, password });
@@ -30,6 +36,11 @@ const getUserById = asyncHandler(async (req, res) => {
 });
 
 const updateUserById = asyncHandler(async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ success: false, errors: errors.array() });
+  }
+
   const { id } = req.params;
   const { username, password } = req.body;
 
@@ -52,16 +63,13 @@ const updateUserById = asyncHandler(async (req, res) => {
     user.password = password;
   }
 
-  // Validate user data
-  try {
-    await user.validate();
-  } catch (error) {
-    return res.status(400).json({ success: false, error: error.message });
-  }
-
   // Save the updated user
-  const updatedUser = await user.save();
-  res.status(200).json({ success: true, data: updatedUser });
+  try {
+    await user.save();
+    res.status(200).json({ success: true, data: user });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
 });
 
 // Delete User by ID
