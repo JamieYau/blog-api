@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const postController = require("../controllers/postController");
+const commentController = require("../controllers/commentController")
 const { authenticateToken } = require("../controllers/authController");
 const { body, param } = require("express-validator");
 const { handleValidationErrors } = require("../middlewares");
@@ -22,7 +23,6 @@ router.post(
   authenticateToken,
   postController.createPost
 );
-
 
 // Get All Posts
 router.get("/", postController.getPosts);
@@ -52,5 +52,8 @@ router.delete(
   authenticateToken,
   postController.deletePostById
 );
+
+// Get comments related to post
+router.get("/:postId/comments", commentController.getCommentsByPostId);
 
 module.exports = router;

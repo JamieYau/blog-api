@@ -41,6 +41,19 @@ const getComments = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, data: comments });
 });
 
+// Get Comments by postId
+const getCommentsByPostId = asyncHandler(async (req, res) => {
+  const { postId } = req.params;
+  console.log(postId)
+  try {
+    // Fetch comments related to the specified post
+    const comments = await Comment.find({ postId });
+    res.status(200).json({ success: true, data: comments });
+  } catch (error) {
+    res.status(500).json({ success: false, error: "Internal Server Error" });
+  }
+});
+
 // Get Comment by ID
 const getCommentById = asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -105,6 +118,7 @@ const deleteCommentById = asyncHandler(async (req, res) => {
 module.exports = {
   createComment,
   getComments,
+  getCommentsByPostId,
   getCommentById,
   updateCommentById,
   deleteCommentById,
