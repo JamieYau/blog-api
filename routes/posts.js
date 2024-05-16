@@ -53,6 +53,20 @@ router.delete(
   postController.deletePostById
 );
 
+// Create New Comment with validation
+router.post(
+  "/:postId/comments",
+  [
+    body("content")
+      .trim()
+      .notEmpty()
+      .withMessage("Comment content is required"),
+  ],
+  handleValidationErrors,
+  authenticateToken,
+  commentController.createComment
+);
+
 // Get comments related to post
 router.get("/:postId/comments", commentController.getCommentsByPostId);
 

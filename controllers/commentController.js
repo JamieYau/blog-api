@@ -4,7 +4,8 @@ const Post = require("../models/PostModel");
 
 // Create Comment
 const createComment = asyncHandler(async (req, res) => {
-  const { postId, content } = req.body;
+  const { postId } = req.params;
+  const { content } = req.body;
 
   // Check if the post exists
   const post = await Post.findById(postId);
@@ -30,7 +31,7 @@ const createComment = asyncHandler(async (req, res) => {
       authorId: userId,
     });
     res.status(201).json({ success: true, data: comment });
-  } catch {
+  } catch (error) {
     res.status(400).json({ success: false, error: error.message });
   }
 });
@@ -44,7 +45,7 @@ const getComments = asyncHandler(async (req, res) => {
 // Get Comments by postId
 const getCommentsByPostId = asyncHandler(async (req, res) => {
   const { postId } = req.params;
-  console.log(postId)
+  console.log(postId);
   try {
     // Fetch comments related to the specified post
     const comments = await Comment.find({ postId });

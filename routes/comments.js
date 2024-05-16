@@ -5,21 +5,6 @@ const { authenticateToken } = require("../controllers/authController");
 const { body, param } = require("express-validator");
 const { handleValidationErrors } = require("../middlewares");
 
-// Create New Comment with validation
-router.post(
-  "/",
-  [
-    body("postId").isMongoId().withMessage("Invalid Post ID"),
-    body("content")
-      .trim()
-      .notEmpty()
-      .withMessage("Comment content is required"),
-  ],
-  handleValidationErrors,
-  authenticateToken,
-  commentController.createComment
-);
-
 // Get All Comments
 router.get("/", commentController.getComments);
 
