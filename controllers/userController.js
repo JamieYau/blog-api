@@ -14,7 +14,6 @@ const createUser = asyncHandler(async (req, res) => {
 
 // Get all Users
 const getUsers = asyncHandler(async (req, res) => {
-  res.send("This is users");
   const users = await User.find().select("-password");
   res.status(200).json({ success: true, data: users });
 });
