@@ -15,6 +15,7 @@ const userSchema = new Schema({
     minlength: [8, "Password must be at least 8 characters long"],
     maxlength: [32, "Password cannot exceed 32 characters"],
   },
+  isAdmin: { type: Boolean, default: false },
 });
 
 // Schema method to validate user password

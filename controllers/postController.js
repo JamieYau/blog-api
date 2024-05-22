@@ -24,7 +24,16 @@ const createPost = asyncHandler(async (req, res) => {
 
 // Get All Posts
 const getPosts = asyncHandler(async (req, res) => {
-  const posts = await Post.find({ published: true }); // Only fetch published posts
+  let posts;
+
+  if (req.user && req.user.isAdmin) {
+    // If user is authenticated and is an admin, get all posts
+    posts = await Post.find();
+  } else {
+    // If user is not authenticated or is not an admin, get only published posts
+    posts = await Post.find({ published: true });
+  }
+
   res.status(200).json({ success: true, data: posts });
 });
 

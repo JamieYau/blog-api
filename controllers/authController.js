@@ -27,7 +27,7 @@ const login = asyncHandler(async (req, res) => {
 
   // Generate JWT token
   const token = jwt.sign(
-    { userId: user._id, username: user.username },
+    { userId: user._id, username: user.username, isAdmin: user.isAdmin },
     JWT_SECRET,
     { expiresIn: "1h" }
   );
@@ -59,7 +59,27 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
+// Middleware function for optional token authentication
+const authenticateTokenOptional = (req, res, next) => {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+
+  if (!token) {
+    return next(); // Proceed without attaching user
+  }
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) {
+      return next(); // Proceed without attaching user
+    }
+
+    req.user = user; // Attach user to request object
+    next();
+  });
+};
+
 module.exports = {
   login,
   authenticateToken,
+  authenticateTokenOptional
 };

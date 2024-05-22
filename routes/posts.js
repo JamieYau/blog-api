@@ -1,10 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const postController = require("../controllers/postController");
-const commentController = require("../controllers/commentController")
-const { authenticateToken } = require("../controllers/authController");
+const commentController = require("../controllers/commentController");
+const { authenticateToken, authenticateTokenOptional } = require("../controllers/authController");
 const { body, param } = require("express-validator");
-const { handleValidationErrors } = require("../middlewares");
+const { handleValidationErrors, isAdminMiddleware } = require("../middlewares");
 
 // Create New Post
 router.post(
@@ -21,11 +21,12 @@ router.post(
   ],
   handleValidationErrors,
   authenticateToken,
+  isAdminMiddleware,
   postController.createPost
 );
 
 // Get All Posts
-router.get("/", postController.getPosts);
+router.get("/", authenticateTokenOptional, postController.getPosts);
 
 // Get Post by ID
 router.get(
@@ -41,6 +42,7 @@ router.put(
   [param("id").isMongoId().withMessage("Invalid Post ID")],
   handleValidationErrors,
   authenticateToken,
+  isAdminMiddleware,
   postController.updatePostById
 );
 
@@ -50,6 +52,7 @@ router.delete(
   [param("id").isMongoId().withMessage("Invalid Post ID")],
   handleValidationErrors,
   authenticateToken,
+  isAdminMiddleware,
   postController.deletePostById
 );
 
