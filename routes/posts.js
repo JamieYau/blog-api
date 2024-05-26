@@ -4,7 +4,12 @@ const postController = require("../controllers/postController");
 const commentController = require("../controllers/commentController");
 const { authenticateToken, authenticateTokenOptional } = require("../controllers/authController");
 const { body, param } = require("express-validator");
+const sanitizeHtml = require("sanitize-html")
 const { handleValidationErrors, isAdminMiddleware } = require("../middlewares");
+
+const htmlSanitizer = (value) => {
+  return sanitizeHtml(value);
+};
 
 // Create New Post
 router.post(

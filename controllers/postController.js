@@ -97,8 +97,8 @@ const deletePostById = asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, error: "Post not found" });
   }
 
-  // Check if the authenticated user is the author of the post
-  if (req.user.userId !== post.authorId.toString()) {
+  // Check if the authenticated user is the author of the post, or an admin
+  if (req.user.userId !== post.authorId.toString() && !req.user.isAdmin) {
     return res.status(403).json({ success: false, error: "Unauthorized" });
   }
 
