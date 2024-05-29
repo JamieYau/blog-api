@@ -67,13 +67,13 @@ const updatePostById = asyncHandler(async (req, res) => {
   }
 
   // Update fields
-  if (title) {
+  if (title !== undefined) {
     post.title = title;
   }
-  if (content) {
+  if (content !== undefined) {
     post.content = content;
   }
-  if (published) {
+  if (published !== undefined) {
     post.published = published;
   }
   post.updatedAt = Date.now();
@@ -86,6 +86,7 @@ const updatePostById = asyncHandler(async (req, res) => {
     res.status(400).json({ success: false, error: "Could not update post" });
   }
 });
+
 
 // Delete Post by ID
 const deletePostById = asyncHandler(async (req, res) => {
