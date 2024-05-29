@@ -1,4 +1,13 @@
 # Blog API
+## Project Overview
+This is a Full Stack Blog Project with three separate components:
+
+- **Backend (API):** Provides RESTful endpoints for posts and comments.
+- **Client:** A user-facing application for viewing and interacting with blog posts and comments.
+- **CMS:** An administrative interface for managing posts and comments.
+
+## Description
+
 
 ## API Documentation
 ### Auth Routes
