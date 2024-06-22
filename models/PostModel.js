@@ -23,6 +23,14 @@ const postSchema = new Schema({
     default: false,
     required: true,
   },
+  coverImageUrl: {
+    type: String,
+  },
+  tags: [
+    {
+      type: String,
+    },
+  ],
   createdAt: {
     type: Date,
     default: Date.now,
