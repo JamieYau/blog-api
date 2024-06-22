@@ -9,6 +9,11 @@ const {
 const { body, param } = require("express-validator");
 const sanitizeHtml = require("sanitize-html");
 const { handleValidationErrors, isAdminMiddleware } = require("../middlewares");
+const multer = require("multer");
+
+// Multer configuration for file uploads
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 // Custom sanitizer middleware for post content
 const sanitizePostContent = (req, res, next) => {
@@ -78,6 +83,7 @@ const sanitizePostContent = (req, res, next) => {
 // Create New Post
 router.post(
   "/",
+  upload.single("coverImage"), // Middleware for handling single file upload
   [
     body("title")
       .trim()
@@ -109,7 +115,20 @@ router.get(
 // Update Post by ID
 router.put(
   "/:id",
-  [param("id").isMongoId().withMessage("Invalid Post ID")],
+  upload.single("coverImage"),
+  [
+    param("id").isMongoId().withMessage("Invalid Post ID"),
+    body("title")
+      .optional()
+      .trim()
+      .isLength({ min: 3, max: 100 })
+      .withMessage("Title must be between 3 and 100 characters long"),
+    body("content")
+      .optional()
+      .trim()
+      .isLength({ min: 10 })
+      .withMessage("Content must be at least 10 characters long"),
+  ],
   handleValidationErrors,
   authenticateToken,
   isAdminMiddleware,

@@ -1,12 +1,44 @@
 const asyncHandler = require("express-async-handler");
 const Post = require("../models/PostModel");
+const cloudinary = require("cloudinary").v2;
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
 
 // Create Post
 const createPost = asyncHandler(async (req, res) => {
-  const { title, content, published } = req.body;
+  const { title, content, published, tags } = req.body;
+  let coverImageUrl = '';
 
   // Extract the user ID from the authenticated user's token
   const userId = req.user.userId;
+
+  // Handle cover image upload
+  if (req.file) {
+    try {
+      const uploadResult = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { resource_type: 'image', folder: 'blog_covers' },
+          (error, result) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve(result);
+            }
+          }
+        );
+        stream.end(req.file.buffer);
+      });
+
+      coverImageUrl = uploadResult.secure_url;
+    } catch (error) {
+      return res.status(500).json({ success: false, error: "Image upload failed" });
+    }
+  }
 
   // Create the post
   try {
@@ -15,6 +47,8 @@ const createPost = asyncHandler(async (req, res) => {
       content,
       published,
       authorId: userId,
+      coverImageUrl,
+      tags: tags ? tags.split(',').map(tag => tag.trim()) : []
     });
     res.status(201).json({ success: true, data: post });
   } catch (error) {
@@ -53,7 +87,8 @@ const getPostById = asyncHandler(async (req, res) => {
 // Update Post by ID
 const updatePostById = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { title, content, published } = req.body;
+  const { title, content, published, tags } = req.body;
+  let coverImageUrl;
 
   // Find the post by ID
   const post = await Post.findById(id);
@@ -66,6 +101,18 @@ const updatePostById = asyncHandler(async (req, res) => {
     return res.status(403).json({ success: false, error: "Unauthorized" });
   }
 
+  // Handle cover image upload
+  if (req.file) {
+    try {
+      const uploadResult = await cloudinary.uploader.upload(req.file.path);
+      coverImageUrl = uploadResult.secure_url;
+    } catch (error) {
+      return res
+        .status(500)
+        .json({ success: false, error: "Image upload failed" });
+    }
+  }
+
   // Update fields
   if (title !== undefined) {
     post.title = title;
@@ -75,6 +122,12 @@ const updatePostById = asyncHandler(async (req, res) => {
   }
   if (published !== undefined) {
     post.published = published;
+  }
+  if (coverImageUrl) {
+    post.coverImageUrl = coverImageUrl;
+  }
+  if (tags !== undefined) {
+    post.tags = tags.split(",").map((tag) => tag.trim());
   }
   post.updatedAt = Date.now();
 
@@ -86,7 +139,6 @@ const updatePostById = asyncHandler(async (req, res) => {
     res.status(400).json({ success: false, error: "Could not update post" });
   }
 });
-
 
 // Delete Post by ID
 const deletePostById = asyncHandler(async (req, res) => {
