@@ -2,6 +2,25 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/UserModel");
 const asyncHandler = require("express-async-handler");
 const { JWT_SECRET } = process.env;
+const { JWT_REFRESH_SECRET } = process.env;
+
+const generateTokens = (user) => {
+  const accessToken = jwt.sign(
+    { userId: user._id, username: user.username, isAdmin: user.isAdmin },
+    JWT_SECRET,
+    {
+      expiresIn: "15m",
+    }
+  );
+  const refreshToken = jwt.sign(
+    { userId: user._id, username: user.username, isAdmin: user.isAdmin },
+    JWT_REFRESH_SECRET,
+    {
+      expiresIn: "7d",
+    }
+  );
+  return { accessToken, refreshToken };
+};
 
 // User login
 const login = asyncHandler(async (req, res) => {
@@ -25,14 +44,17 @@ const login = asyncHandler(async (req, res) => {
       .json({ success: false, message: "Invalid username or password" });
   }
 
-  // Generate JWT token
-  const token = jwt.sign(
-    { userId: user._id, username: user.username, isAdmin: user.isAdmin },
-    JWT_SECRET,
-    { expiresIn: "1h" }
-  );
+  // Generate JWT and Refresh tokens
+  const { accessToken, refreshToken } = generateTokens(user);
+  // Assigning refresh token in http-only cookie
+  res.cookie("jwt", refreshToken, {
+    httpOnly: true,
+    sameSite: "None",
+    secure: true,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
 
-  res.status(200).json({ success: true, token });
+  res.status(200).json({ success: true, accessToken });
 });
 
 // Middleware function to authenticate JWT token
@@ -45,14 +67,12 @@ const authenticateToken = (req, res, next) => {
     // If token is not provided, return 401 Unauthorized
     return res.sendStatus(401);
   }
-
   // Verify the token
   jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) {
       // If token is invalid, return 403 Forbidden
       return res.sendStatus(403);
     }
-
     // Attach the authenticated user to the request object
     req.user = user;
     next(); // Call the next middleware
@@ -78,8 +98,26 @@ const authenticateTokenOptional = (req, res, next) => {
   });
 };
 
+const refreshToken = (req, res, next) => {
+  const refreshToken = req.cookies.refreshToken;
+  if (!refreshToken) return res.sendStatus(401);
+
+  jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, (err, user) => {
+    if (err) return res.sendStatus(403);
+
+    const accessToken = jwt.sign(
+      { userId: user.userId },
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" }
+    );
+    res.json({ accessToken });
+    next;
+  });
+};
+
 module.exports = {
   login,
   authenticateToken,
-  authenticateTokenOptional
+  authenticateTokenOptional,
+  refreshToken
 };
