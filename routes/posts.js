@@ -19,38 +19,14 @@ const upload = multer({ storage: storage });
 const sanitizePostContent = (req, res, next) => {
   if (req.body.content) {
     req.body.content = sanitizeHtml(req.body.content, {
-      allowedTags: [
-        "p",
-        "br",
-        "strong",
-        "em",
-        "u",
-        "s",
-        "ul",
-        "ol",
-        "li",
-        "a",
-        "h1",
-        "h2",
-        "h3",
-        "h4",
-        "h5",
-        "h6",
-        "blockquote",
-        "span",
-        "table",
-        "thead",
-        "tbody",
-        "tfoot",
-        "tr",
-        "th",
-        "td",
-        "caption",
-      ],
+      allowedTags: sanitizeHtml.defaults.allowedTags.concat(["img"]),
       allowedAttributes: {
         a: ["href", "title", "target"],
-        img: ["src", "alt"],
-        "*": ["style"],
+        img: ["src", "srcset", "alt", "title", "width", "height", "loading"],
+        "*": ["style", "id", "width", "height"], // Allow style attribute for all tags
+      },
+      allowedClasses: {
+        "*": false, // for all tags allow all classes
       },
       allowedStyles: {
         "*": {
@@ -64,14 +40,13 @@ const sanitizePostContent = (req, res, next) => {
           border: [/.*/],
           "background-color": [/.*/],
           "text-align": [/^left$/, /^right$/, /^center$/, /^justify$/],
+          "text-decoration": [/.*/],
           "font-family": [/.*/],
           "font-size": [/^\d+(?:px|pt|em|%)$/],
           "font-style": [/.*/],
           "font-weight": [/.*/],
           "line-height": [/.*/],
-        },
-        p: {
-          "font-size": [/^\d+rem$/],
+          "list-style-type:": [/.*/],
         },
       },
       parseStyleAttributes: true, // Allow parsing of style attributes
