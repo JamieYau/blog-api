@@ -104,7 +104,20 @@ const updatePostById = asyncHandler(async (req, res) => {
   // Handle cover image upload
   if (req.file) {
     try {
-      const uploadResult = await cloudinary.uploader.upload(req.file.path);
+      const uploadResult = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { resource_type: "image", folder: "blog_covers" },
+          (error, result) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve(result);
+            }
+          }
+        );
+        stream.end(req.file.buffer);
+      });
+
       coverImageUrl = uploadResult.secure_url;
     } catch (error) {
       return res
