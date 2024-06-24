@@ -45,7 +45,6 @@ const getComments = asyncHandler(async (req, res) => {
 // Get Comments by postId
 const getCommentsByPostId = asyncHandler(async (req, res) => {
   const { postId } = req.params;
-  console.log(postId);
   try {
     // Fetch comments related to the specified post
     const comments = await Comment.find({ postId });

@@ -28,12 +28,17 @@ mongoose
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 
-app.use(cors());
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
+
+const corsOptions = {
+  origin: "http://localhost:5173", // Frontend origin
+  credentials: true, // Enable cookies to be sent
+};
+app.use(cors(corsOptions));
 
 app.use("/", indexRouter);
 app.use("/api/users", usersRouter);
