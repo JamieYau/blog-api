@@ -1,22 +1,23 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/UserModel");
 const asyncHandler = require("express-async-handler");
-const { JWT_SECRET } = process.env;
-const { JWT_REFRESH_SECRET } = process.env;
+const { JWT_SECRET, JWT_REFRESH_SECRET } = process.env;
+const ACCESSEXPIRY = "15m";
+const REFRESHEXPIRY = "7d";
 
 const generateTokens = (user) => {
   const accessToken = jwt.sign(
     { userId: user._id, username: user.username, isAdmin: user.isAdmin },
     JWT_SECRET,
     {
-      expiresIn: "15m",
+      expiresIn: ACCESSEXPIRY,
     }
   );
   const refreshToken = jwt.sign(
     { userId: user._id, username: user.username, isAdmin: user.isAdmin },
     JWT_REFRESH_SECRET,
     {
-      expiresIn: "7d",
+      expiresIn: REFRESHEXPIRY,
     }
   );
   return { accessToken, refreshToken };
@@ -29,25 +30,17 @@ const login = asyncHandler(async (req, res) => {
   // Find the user by username
   const user = await User.findOne({ username });
 
-  // Check if user exists
-  if (!user) {
+  // Check user credentials
+  if (!user || !(await user.validatePassword(password))) {
     return res
       .status(401)
-      .json({ success: false, message: "Invalid username" });
-  }
-
-  // Validate the password
-  const isValidPassword = await user.validatePassword(password);
-  if (!isValidPassword) {
-    return res
-      .status(401)
-      .json({ success: false, message: "Invalid username or password" });
+      .json({ success: false, message: "Invalid credentials" });
   }
 
   // Generate JWT and Refresh tokens
   const { accessToken, refreshToken } = generateTokens(user);
-  // Assigning refresh token in http-only cookie
-  res.cookie("jwt", refreshToken, {
+  // Assigning refresh accessToken in http-only cookie
+  res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
     sameSite: "None",
     secure: true,
@@ -57,20 +50,20 @@ const login = asyncHandler(async (req, res) => {
   res.status(200).json({ success: true, accessToken });
 });
 
-// Middleware function to authenticate JWT token
+// Middleware function to authenticate JWT accessToken
 const authenticateToken = (req, res, next) => {
-  // Get the token from the Authorization header
+  // Get the accessToken from the Authorization header
   const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
+  const accessToken = authHeader && authHeader.split(" ")[1];
 
-  if (!token) {
-    // If token is not provided, return 401 Unauthorized
+  if (!accessToken) {
+    // If accessToken is not provided, return 401 Unauthorized
     return res.sendStatus(401);
   }
-  // Verify the token
-  jwt.verify(token, JWT_SECRET, (err, user) => {
+  // Verify the accessToken
+  jwt.verify(accessToken, JWT_SECRET, (err, user) => {
     if (err) {
-      // If token is invalid, return 403 Forbidden
+      // If accessToken is invalid, return 403 Forbidden
       return res.sendStatus(403);
     }
     // Attach the authenticated user to the request object
@@ -79,16 +72,16 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-// Middleware function for optional token authentication
+// Middleware function for optional accessToken authentication
 const authenticateTokenOptional = (req, res, next) => {
   const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
+  const accessToken = authHeader && authHeader.split(" ")[1];
 
-  if (!token) {
+  if (!accessToken) {
     return next(); // Proceed without attaching user
   }
 
-  jwt.verify(token, JWT_SECRET, (err, user) => {
+  jwt.verify(accessToken, JWT_SECRET, (err, user) => {
     if (err) {
       return next(); // Proceed without attaching user
     }
@@ -98,26 +91,29 @@ const authenticateTokenOptional = (req, res, next) => {
   });
 };
 
-const refreshToken = (req, res, next) => {
+const refreshToken = asyncHandler(async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
-  if (!refreshToken) return res.sendStatus(401);
+  if (!refreshToken) {
+    return res.status(401).json({ message: "Refresh token not found" });
+  }
 
-  jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, (err, user) => {
-    if (err) return res.sendStatus(403);
-
-    const accessToken = jwt.sign(
-      { userId: user.userId },
-      process.env.JWT_SECRET,
-      { expiresIn: "15m" }
+  try {
+    const user = jwt.verify(refreshToken, JWT_REFRESH_SECRET);
+    const newAccessToken = jwt.sign(
+      { userId: user.userId, username: user.username, isAdmin: user.isAdmin },
+      JWT_SECRET,
+      { expiresIn: ACCESSEXPIRY }
     );
-    res.json({ accessToken });
-    next;
-  });
-};
+    res.json({ accessToken: newAccessToken });
+  } catch (err) {
+    console.log("Invalid refresh token", err);
+    return res.status(403).json({ message: "Invalid refresh token" });
+  }
+});
 
 module.exports = {
   login,
   authenticateToken,
   authenticateTokenOptional,
-  refreshToken
+  refreshToken,
 };
