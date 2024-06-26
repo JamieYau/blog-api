@@ -142,7 +142,6 @@ const updatePostById = asyncHandler(async (req, res) => {
   if (tags !== undefined) {
     post.tags = tags.split(",").map((tag) => tag.trim());
   }
-  post.updatedAt = Date.now();
 
   // Save the updated post
   try {

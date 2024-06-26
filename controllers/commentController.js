@@ -84,7 +84,6 @@ const updateCommentById = asyncHandler(async (req, res) => {
 
   // Update fields
   comment.content = content;
-  comment.updatedAt = Date.now();
 
   // Save the Updated comment
   try {
