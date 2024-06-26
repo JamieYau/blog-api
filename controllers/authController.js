@@ -47,7 +47,14 @@ const login = asyncHandler(async (req, res) => {
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
-  res.status(200).json({ success: true, accessToken });
+  res
+    .status(200)
+    .json({
+      success: true,
+      accessToken,
+      userId: user._id,
+      isAdmin: user.isAdmin,
+    });
 });
 
 // Middleware function to authenticate JWT accessToken
