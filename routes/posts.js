@@ -120,6 +120,12 @@ router.delete(
   postController.deletePostById
 );
 
+router.post(
+  "/:postId/toggle-like",
+  authenticateToken,
+  postController.toggleLikeById
+);
+
 // Create New Comment with validation
 router.post(
   "/:postId/comments",

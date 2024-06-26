@@ -8,11 +8,10 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-
 // Create Post
 const createPost = asyncHandler(async (req, res) => {
   const { title, content, published, tags } = req.body;
-  let coverImageUrl = '';
+  let coverImageUrl = "";
 
   // Extract the user ID from the authenticated user's token
   const userId = req.user.userId;
@@ -22,7 +21,7 @@ const createPost = asyncHandler(async (req, res) => {
     try {
       const uploadResult = await new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
-          { resource_type: 'image', folder: 'blog_covers' },
+          { resource_type: "image", folder: "blog_covers" },
           (error, result) => {
             if (error) {
               reject(error);
@@ -36,7 +35,9 @@ const createPost = asyncHandler(async (req, res) => {
 
       coverImageUrl = uploadResult.secure_url;
     } catch (error) {
-      return res.status(500).json({ success: false, error: "Image upload failed" });
+      return res
+        .status(500)
+        .json({ success: false, error: "Image upload failed" });
     }
   }
 
@@ -48,7 +49,7 @@ const createPost = asyncHandler(async (req, res) => {
       published,
       authorId: userId,
       coverImageUrl,
-      tags: tags ? tags.split(',').map(tag => tag.trim()) : []
+      tags: tags ? tags.split(",").map((tag) => tag.trim()) : [],
     });
     res.status(201).json({ success: true, data: post });
   } catch (error) {
@@ -172,10 +173,37 @@ const deletePostById = asyncHandler(async (req, res) => {
   res.status(204).end();
 });
 
+// Like Post by ID
+const toggleLikeById = asyncHandler(async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const userId = req.user.userId;
+
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({ success:false, error: "Post not found" });
+    }
+
+    const likeIndex = post.likes.indexOf(userId);
+    if (likeIndex === -1) {
+      // User hasn't liked the post yet, so add their like
+      post.likes.push(userId);
+    } else {
+      // User has already liked the post, so remove their like
+      post.likes.splice(likeIndex, 1);
+    }
+    await post.save();
+    res.status(200).json({ success: true, data: post });
+  } catch (error) {
+    res.status(500).json({success:false, error: error.message });
+  }
+});
+
 module.exports = {
   createPost,
   getPosts,
   getPostById,
   updatePostById,
   deletePostById,
+  toggleLikeById,
 };
