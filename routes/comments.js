@@ -31,6 +31,12 @@ router.put(
   commentController.updateCommentById
 );
 
+router.post(
+  "/:id/toggle-like",
+  authenticateToken,
+  commentController.toggleLikeById
+);
+
 // Delete Comment by ID with validation
 router.delete(
   "/:id",

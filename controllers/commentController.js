@@ -94,6 +94,32 @@ const updateCommentById = asyncHandler(async (req, res) => {
   }
 });
 
+// Like Comment by ID
+const toggleLikeById = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.userId;
+
+    const comment = await Comment.findById(id);
+    if (!comment) {
+      return res.status(404).json({ success:false, error: "Comment not found" });
+    }
+
+    const likeIndex = comment.likes.indexOf(userId);
+    if (likeIndex === -1) {
+      // User hasn't liked the comment yet, so add their like
+      comment.likes.push(userId);
+    } else {
+      // User has already liked the comment, so remove their like
+      comment.likes.splice(likeIndex, 1);
+    }
+    await comment.save();
+    res.status(200).json({ success: true, data: comment });
+  } catch (error) {
+    res.status(500).json({success:false, error: error.message });
+  }
+});
+
 // Delete Comment by ID
 const deleteCommentById = asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -120,5 +146,6 @@ module.exports = {
   getCommentsByPostId,
   getCommentById,
   updateCommentById,
+  toggleLikeById,
   deleteCommentById,
 };
