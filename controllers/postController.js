@@ -223,5 +223,4 @@ module.exports = {
   updatePostById,
   deletePostById,
   toggleLikeById,
-  searchPosts,
 };
