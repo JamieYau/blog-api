@@ -57,19 +57,36 @@ const createPost = asyncHandler(async (req, res) => {
   }
 });
 
-// Get All Posts
+// Get Posts
 const getPosts = asyncHandler(async (req, res) => {
-  let posts;
+  const { authorId, searchTerm } = req.query;
+  const isAdmin = req.user && req.user.isAdmin;
+  const sortDirection = req.query.order === "asc" ? 1 : -1;
 
-  if (req.user && req.user.isAdmin) {
-    // If user is authenticated and is an admin, get all posts
-    posts = await Post.find();
-  } else {
-    // If user is not authenticated or is not an admin, get only published posts
-    posts = await Post.find({ published: true });
-  }
+  // initial query based on admin status
+  const postsQuery = isAdmin ? {} : { published: true };
 
-  res.status(200).json({ success: true, data: posts });
+  // Use spread operator to append optional queries to postsQuery
+  const optionalQueries = {
+    ...(authorId && { authorId: authorId }),
+    ...(searchTerm && {
+      $or: [
+        { title: { $regex: searchTerm, $options: "i" } },
+        { content: { $regex: searchTerm, $options: "i" } },
+        { tags: { $regex: searchTerm, $options: "i" } },
+      ],
+    }),
+  };
+
+  // Merge optional queries into main query object
+  const mergedQuery = { ...postsQuery, ...optionalQueries };
+
+  const posts = await Post.find(mergedQuery).sort({ updatedAt: sortDirection });
+
+  res.status(200).json({
+    success: true,
+    data: posts,
+  });
 });
 
 // Get Post by ID
@@ -199,32 +216,6 @@ const toggleLikeById = asyncHandler(async (req, res) => {
   }
 });
 
-// Search posts by title or tags
-const searchPosts = asyncHandler(async (req, res) => {
-  try {
-    const { query } = req.query;
-    const isAdmin = req.user && req.user.isAdmin;
-
-    // Define the search criteria
-    let searchCriteria = isAdmin ? {} : { published: true };
-
-    // If a search query is provided, add title and tags to the search criteria
-    if (query) {
-      searchCriteria.$or = [
-        { title: { $regex: query, $options: "i" } },
-        { tags: { $regex: query, $options: "i" } },
-      ];
-    }
-
-    // Perform the search
-    const posts = await Post.find(searchCriteria);
-    res.status(200).json({ success: true, data: posts });
-  } catch (error) {
-    console.error("Error searching posts", error);
-    res.status(500).json({ success:false, error: error.message });
-  }
-});
-
 module.exports = {
   createPost,
   getPosts,
@@ -232,5 +223,5 @@ module.exports = {
   updatePostById,
   deletePostById,
   toggleLikeById,
-  searchPosts
+  searchPosts,
 };
