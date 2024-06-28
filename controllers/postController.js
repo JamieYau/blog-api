@@ -181,7 +181,7 @@ const toggleLikeById = asyncHandler(async (req, res) => {
 
     const post = await Post.findById(postId);
     if (!post) {
-      return res.status(404).json({ success:false, error: "Post not found" });
+      return res.status(404).json({ success: false, error: "Post not found" });
     }
 
     const likeIndex = post.likes.indexOf(userId);
@@ -195,7 +195,33 @@ const toggleLikeById = asyncHandler(async (req, res) => {
     await post.save();
     res.status(200).json({ success: true, data: post });
   } catch (error) {
-    res.status(500).json({success:false, error: error.message });
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Search posts by title or tags
+const searchPosts = asyncHandler(async (req, res) => {
+  try {
+    const { query } = req.query;
+    const isAdmin = req.user && req.user.isAdmin;
+
+    // Define the search criteria
+    let searchCriteria = isAdmin ? {} : { published: true };
+
+    // If a search query is provided, add title and tags to the search criteria
+    if (query) {
+      searchCriteria.$or = [
+        { title: { $regex: query, $options: "i" } },
+        { tags: { $regex: query, $options: "i" } },
+      ];
+    }
+
+    // Perform the search
+    const posts = await Post.find(searchCriteria);
+    res.status(200).json({ success: true, data: posts });
+  } catch (error) {
+    console.error("Error searching posts", error);
+    res.status(500).json({ success:false, error: error.message });
   }
 });
 
@@ -206,4 +232,5 @@ module.exports = {
   updatePostById,
   deletePostById,
   toggleLikeById,
+  searchPosts
 };

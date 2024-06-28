@@ -79,6 +79,9 @@ router.post(
 // Get All Posts
 router.get("/", authenticateTokenOptional, postController.getPosts);
 
+// Define the search route
+router.get("/search", authenticateTokenOptional, postController.searchPosts);
+
 // Get Post by ID
 router.get(
   "/:id",
