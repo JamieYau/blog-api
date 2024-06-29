@@ -57,19 +57,36 @@ const createPost = asyncHandler(async (req, res) => {
   }
 });
 
-// Get All Posts
+// Get Posts
 const getPosts = asyncHandler(async (req, res) => {
-  let posts;
+  const { authorId, searchTerm, order } = req.query;
+  const isAdmin = req.user && req.user.isAdmin;
+  const sortDirection = order === "asc" ? 1 : -1;
 
-  if (req.user && req.user.isAdmin) {
-    // If user is authenticated and is an admin, get all posts
-    posts = await Post.find();
-  } else {
-    // If user is not authenticated or is not an admin, get only published posts
-    posts = await Post.find({ published: true });
-  }
+  // initial query based on admin status
+  const postsQuery = isAdmin ? {} : { published: true };
 
-  res.status(200).json({ success: true, data: posts });
+  // Use spread operator to append optional queries to postsQuery
+  const optionalQueries = {
+    ...(authorId && { authorId: authorId }),
+    ...(searchTerm && {
+      $or: [
+        { title: { $regex: searchTerm, $options: "i" } },
+        { content: { $regex: searchTerm, $options: "i" } },
+        { tags: { $regex: searchTerm, $options: "i" } },
+      ],
+    }),
+  };
+
+  // Merge optional queries into main query object
+  const mergedQuery = { ...postsQuery, ...optionalQueries };
+
+  const posts = await Post.find(mergedQuery).sort({ updatedAt: sortDirection });
+
+  res.status(200).json({
+    success: true,
+    data: posts,
+  });
 });
 
 // Get Post by ID
@@ -181,7 +198,7 @@ const toggleLikeById = asyncHandler(async (req, res) => {
 
     const post = await Post.findById(postId);
     if (!post) {
-      return res.status(404).json({ success:false, error: "Post not found" });
+      return res.status(404).json({ success: false, error: "Post not found" });
     }
 
     const likeIndex = post.likes.indexOf(userId);
@@ -192,10 +209,10 @@ const toggleLikeById = asyncHandler(async (req, res) => {
       // User has already liked the post, so remove their like
       post.likes.splice(likeIndex, 1);
     }
-    await post.save();
+    await post.save({ timestamps: false });
     res.status(200).json({ success: true, data: post });
   } catch (error) {
-    res.status(500).json({success:false, error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
