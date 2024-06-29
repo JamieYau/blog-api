@@ -59,9 +59,9 @@ const createPost = asyncHandler(async (req, res) => {
 
 // Get Posts
 const getPosts = asyncHandler(async (req, res) => {
-  const { authorId, searchTerm } = req.query;
+  const { authorId, searchTerm, order } = req.query;
   const isAdmin = req.user && req.user.isAdmin;
-  const sortDirection = req.query.order === "asc" ? 1 : -1;
+  const sortDirection = order === "asc" ? 1 : -1;
 
   // initial query based on admin status
   const postsQuery = isAdmin ? {} : { published: true };
