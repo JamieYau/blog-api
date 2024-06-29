@@ -209,7 +209,7 @@ const toggleLikeById = asyncHandler(async (req, res) => {
       // User has already liked the post, so remove their like
       post.likes.splice(likeIndex, 1);
     }
-    await post.save();
+    await post.save({ timestamps: false });
     res.status(200).json({ success: true, data: post });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
