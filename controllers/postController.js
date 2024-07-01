@@ -59,7 +59,7 @@ const createPost = asyncHandler(async (req, res) => {
 
 // Get Posts
 const getPosts = asyncHandler(async (req, res) => {
-  const { authorId, searchTerm, order } = req.query;
+  const { authorId, searchTerm, order, limit, page } = req.query;
   const isAdmin = req.user && req.user.isAdmin;
   const sortDirection = order === "asc" ? 1 : -1;
 
@@ -81,13 +81,22 @@ const getPosts = asyncHandler(async (req, res) => {
   // Merge optional queries into main query object
   const mergedQuery = { ...postsQuery, ...optionalQueries };
 
-  const posts = await Post.find(mergedQuery).sort({ updatedAt: sortDirection });
+  // Validate and set default values for limit and page
+  const postsLimit = parseInt(limit) || 8; // default limit is 8
+  const postsPage = parseInt(page) || 1; // default page is 1
+  const skip = (postsPage - 1) * postsLimit;
+
+  const posts = await Post.find(mergedQuery)
+    .sort({ updatedAt: sortDirection })
+    .limit(postsLimit)
+    .skip(skip);
 
   res.status(200).json({
     success: true,
     data: posts,
   });
 });
+
 
 // Get Post by ID
 // only return published?
