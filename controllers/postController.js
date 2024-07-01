@@ -63,7 +63,7 @@ const getPosts = asyncHandler(async (req, res) => {
   const isAdmin = req.user && req.user.isAdmin;
   const sortDirection = order === "asc" ? 1 : -1;
 
-  // initial query based on admin status
+  // Initial query based on admin status
   const postsQuery = isAdmin ? {} : { published: true };
 
   // Use spread operator to append optional queries to postsQuery
@@ -86,16 +86,26 @@ const getPosts = asyncHandler(async (req, res) => {
   const postsPage = parseInt(page) || 1; // default page is 1
   const skip = (postsPage - 1) * postsLimit;
 
-  const posts = await Post.find(mergedQuery)
-    .sort({ updatedAt: sortDirection })
-    .limit(postsLimit)
-    .skip(skip);
+  // Find posts and total count
+  const [posts, totalPosts] = await Promise.all([
+    Post.find(mergedQuery)
+      .sort({ updatedAt: sortDirection })
+      .limit(postsLimit)
+      .skip(skip),
+    Post.countDocuments(mergedQuery),
+  ]);
 
   res.status(200).json({
     success: true,
     data: posts,
+    meta: {
+      totalPosts,
+      currentPage: postsPage,
+      totalPages: Math.ceil(totalPosts / postsLimit),
+    },
   });
 });
+
 
 
 // Get Post by ID
