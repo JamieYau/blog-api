@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/UserModel");
 const asyncHandler = require("express-async-handler");
-const { JWT_SECRET, JWT_REFRESH_SECRET } = process.env;
+const { JWT_SECRET, JWT_REFRESH_SECRET, NODE_ENV } = process.env;
 const ACCESSEXPIRY = "15m";
 const REFRESHEXPIRY = "7d";
 
@@ -42,7 +42,8 @@ const login = asyncHandler(async (req, res) => {
   // Assigning refresh accessToken in http-only cookie
   res.cookie("refreshToken", refreshToken, {
     httpOnly: true,
-    sameSite: "None",
+    secure: NODE_ENV === "production", // only send cookie over https in production
+    sameSite: "none",
     secure: true,
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });

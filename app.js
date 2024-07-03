@@ -8,7 +8,7 @@ const logger = require("morgan");
 const mongoose = require("mongoose");
 
 dotenv.config();
-const { DB_URI } = process.env;
+const { DB_URI, NODE_ENV } = process.env;
 
 const indexRouter = require("./routes/index");
 const usersRouter = require("./routes/users");
@@ -34,11 +34,24 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
-const corsOptions = {
-  origin: ["http://localhost:5173", "http://localhost:5174"], // Frontend origin
-  credentials: true, // Enable cookies to be sent
-};
-app.use(cors(corsOptions));
+if (NODE_ENV === "development") {
+  const corsOptions = {
+    origin: ["http://localhost:5173", "http://localhost:5174"], // Frontend origin
+    credentials: true, // Enable cookies to be sent
+  };
+  app.use(cors(corsOptions));
+}
+
+if (NODE_ENV === "production") {
+  const corsOptions = {
+    origin: [
+      "https://blog-client-kappa-seven.vercel.app",
+      "https://blog-client-jamie-yaus-projects.vercel.app/",
+    ], // Frontend origin
+    credentials: true, // Enable cookies to be sent
+  };
+  app.use(cors(corsOptions));
+}
 
 app.use("/", indexRouter);
 app.use("/api/users", usersRouter);
