@@ -44,10 +44,7 @@ if (NODE_ENV === "development") {
 
 if (NODE_ENV === "production") {
   const corsOptions = {
-    origin: [
-      "https://blog-client-kappa-seven.vercel.app",
-      "https://blog-client-jamie-yaus-projects.vercel.app/",
-    ], // Frontend origin
+    origin: ["https://blog.jamieyau.com", "https://blog-cms.jamieyau.com"], // Frontend origin
     credentials: true, // Enable cookies to be sent
   };
   app.use(cors(corsOptions));
