@@ -10,8 +10,8 @@ This is a Full Stack Blog Project with three separate components:
 
 ### Links
 
-- Blog Client website : https://blog-client-kappa-seven.vercel.app/
-- Blog CMS website: https://blog-cms-beryl-sigma.vercel.app/
+- Blog Client website : https://blog.jamieyau.com/
+- Blog CMS website: https://blog-cms.jamieyau.com/
 
 ## Description
 
